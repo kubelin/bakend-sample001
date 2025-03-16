@@ -38,4 +38,8 @@ public class MemberResponseDTO {
     public boolean getIsActive() {
         return "ACTIVE".equals(status);
     }
+
+	public MemberResponseDTO(Long memberId, String memberName, String email, String phoneNumber, String status) {
+		// TODO Auto-generated constructor stub
+	}
 }
