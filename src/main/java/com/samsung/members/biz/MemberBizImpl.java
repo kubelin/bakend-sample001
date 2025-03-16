@@ -86,7 +86,7 @@ public class MemberBizImpl implements MemberBiz {
 
 	@Override
 	@Transactional
-	public MemberResponseDTO updateMember(Long memberId, MemberUpdateRequestDTO requestDTO) {
+	public MemberResponseDTO updateMember(long memberId, MemberUpdateRequestDTO requestDTO) {
 		log.info("Updating member with ID: {}", memberId);
 
 		// 기존 회원 정보 조회
@@ -110,7 +110,12 @@ public class MemberBizImpl implements MemberBiz {
 		// 업데이트된 Entity를 응답 DTO로 변환하여 반환
 		return convertToResponseDTO(entity);
 	}
-
+	
+	public Optional<MemberResponseDTO> updateMember(long memberId, MemberResponseDTO updateDTO) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	@Override
 	@Transactional
 	public boolean deleteMember(Long memberId) {
@@ -158,4 +163,13 @@ public class MemberBizImpl implements MemberBiz {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public int countMembersByName(String string) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+
+	
 }

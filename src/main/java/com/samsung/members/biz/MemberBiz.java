@@ -36,10 +36,11 @@ public interface MemberBiz {
     /**
      * 회원 정보 수정
      */
-    MemberResponseDTO updateMember(Long memberId, MemberUpdateRequestDTO requestDTO);
+    MemberResponseDTO updateMember(long memberId, MemberUpdateRequestDTO requestDTO);
     
     /**
      * 회원 정보 삭제
      */
     boolean deleteMember(Long memberId);
+
 }

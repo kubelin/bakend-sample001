@@ -100,8 +100,28 @@ tasks.named('test') {
 }
 
 // Jacoco 설정 (필요에 따라 toolVersion 조정)
+//jacoco {
+//    toolVersion = "0.8.8"
+//}
 jacoco {
-    toolVersion = "0.8.8"
+    toolVersion = "0.8.11" // 최신 버전으로 변경
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'METHOD'
+            includes = [
+                'com.samsung.members.biz.MemberBizImpl.updateMember', // 특정 메서드
+                'com.samsung.members.biz.MemberBizImpl.deleteMember'
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
 }
 
 // Cucumber 보고서를 생성하는 태스크 추가
