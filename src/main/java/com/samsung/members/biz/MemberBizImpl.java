@@ -153,4 +153,9 @@ public class MemberBizImpl implements MemberBiz {
 				.email(entity.getEmail()).phoneNumber(entity.getPhoneNumber()).status(entity.getStatus())
 				.createdDate(entity.getCreatedDate()).updatedDate(entity.getUpdatedDate()).build();
 	}
+
+	public List<MemberResponseDTO> searchMembersByName(String string, long l, long m) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
