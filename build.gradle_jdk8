@@ -1,0 +1,76 @@
+/*
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '2.7.14'  
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'com.samsung'
+version = '0.0.2-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	//spring
+	//implementation ('org.springframework.boot:spring-boot-starter-web'){
+		// without tomcat
+		//exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+		//exclude module: 'spring-boot-starter-tomcat'  		
+	//}
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+	implementation 'org.springframework.boot:spring-boot-starter-logging'
+	implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	
+	// lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	
+	// MySQL Connector
+  	// implementation 'mysql:mysql-connector-java:8.0.23'
+  	 // MS-SQL Server JDBC Driver
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.1.jre8'  // JDK 8 호환 버전
+  	
+  	// Apache Commons Lang
+  	implementation 'org.apache.commons:commons-lang3'
+	
+	// devtools
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	
+	// test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	
+	// Servlet API
+    //providedCompile 'javax.servlet:javax.servlet-api:3.1.0'  // JEUS 8.5와 호환되는 버전
+	// WAR setting
+    //providedCompile 'javax.servlet:javax.servlet-api:4.0.1'
+    //providedCompile 'javax.servlet:javax.servlet-api:3.1.0'  // JEUS 8.5와 호환되는 버전
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    
+	/*** ETC ***/
+	// Tomcat 대신 undertow 
+    // implementation 'org.springframework.boot:spring-boot-starter-undertow'
+	
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+*/

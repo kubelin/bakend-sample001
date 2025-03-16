@@ -1,0 +1,41 @@
+spring:
+  main:
+    web-application-type: servlet 
+   # web-application-type: none # tomcat off
+  jmx:
+    enabled: false
+  application:
+    name: backend-sample001
+  datasource:
+    url: jdbc:oracle:thin:@172.22.210.45:1521:XE
+    username: 'tester'
+    password: '12341234'
+    driver-class-name: oracle.jdbc.OracleDriver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+     pool-name: oracle-connection-pool
+     maximum-pool-size: 10
+     minimum-idle: 2
+     idle-timeout: 30000
+     max-lifetime: 2000000
+     connection-timeout: 30000
+     connection-test-query: SELECT 1 FROM DUAL
+
+server:
+  name: poc-test-server
+  port: 8180
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.samsung.members.dao.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+#server:
+  #port: 18088
+
+#logging:
+#  level:
+#    root: INFO
+#    com.samsung: DEBUG
+#	  org.springframework: INFO
