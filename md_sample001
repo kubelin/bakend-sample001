@@ -1,0 +1,29 @@
+## [Table] MEMBER
+
+**Description:** 회원 기본 정보 테이블
+
+| Column Name | Data Type | Description              |
+|-------------|-----------|--------------------------|
+| MEMBER_ID   | VARCHAR   | 회원 고유 식별자        |
+| NAME        | VARCHAR   | 이름                    |
+| LEVEL       | CHAR(1)   | 회원 등급 (A: 일반, B: VIP) |
+| JOIN_DATE   | DATE      | 가입일                  |
+
+**Constraints:**
+- PRIMARY KEY (MEMBER_ID)
+- LEVEL must be in ('A', 'B', 'C')
+
+**Notes:**
+- LEVEL 변경은 별도 업무 프로세스에 따라 변경됨
+
+---
+
+### 📊 Sample Data (Top 5 rows)
+
+| MEMBER_ID  | NAME    | LEVEL | JOIN_DATE  |
+|------------|---------|-------|------------|
+| M001       | 홍길동   | A     | 2020-01-01 |
+| M002       | 이순신   | B     | 2019-07-15 |
+| M003       | 김유신   | C     | 2021-03-12 |
+| M004       | 강감찬   | A     | 2022-09-30 |
+| M005       | 유관순   | B     | 2018-12-25 |
