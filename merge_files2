@@ -1,0 +1,293 @@
+import json
+import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
+import os
+import sys
+import re
+
+def read_file(file_path):
+    """
+    파일을 읽어서 내용을 반환합니다.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return content
+    except Exception as e:
+        print(f"파일 읽기 오류: {e}")
+        sys.exit(1)
+
+def parse_log_format(content):
+    """
+    로그 형식의 입력 내용을 파싱합니다.
+    """
+    # 로그 헤더 제거 (INFO 줄 제거)
+    content = re.sub(r'\[INFO \].*\n', '', content)
+    
+    # 데이터 부분만 추출
+    content = content.strip()
+    
+    # 객체 스택을 사용하여 중첩 구조 처리
+    result = {}
+    current_path = []
+    objects = [result]  # 객체 스택: 첫 번째는 항상 결과 객체
+    
+    lines = content.split('\n')
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
+        i += 1
+        
+        if not line:  # 빈 줄 건너뛰기
+            continue
+        
+        print(f"처리 중인 라인: {line}")
+        
+        # 객체 시작 (key: [)
+        if line.endswith('[') and ':' in line:
+            key = line.split(':', 1)[0].strip()
+            current_path.append(key)
+            print(f"객체 시작: {key}, 현재 경로: {current_path}")
+            
+            # 현재 객체에 새 객체 추가
+            current_obj = objects[-1]
+            current_obj[key] = {}
+            
+            # 새 객체를 스택에 추가
+            objects.append(current_obj[key])
+        
+        # 객체 종료 (])
+        elif line == ']':
+            if current_path:
+                popped = current_path.pop()
+                print(f"객체 종료: {popped}, 남은 경로: {current_path}")
+            if len(objects) > 1:  # 최상위 객체는 제거하지 않음
+                objects.pop()
+        
+        # 키-값 쌍 (key: value)
+        elif ':' in line:
+            parts = line.split(':', 1)
+            key = parts[0].strip()
+            value = parts[1].strip() if len(parts) > 1 else ""
+            
+            # 현재 객체에 키-값 추가
+            current_obj = objects[-1]
+            current_obj[key] = value
+            print(f"키-값 추가: {key} = {value}")
+        
+        # 키만 있는 경우 (빈 값으로 처리)
+        else:
+            key = line.strip()
+            current_obj = objects[-1]
+            current_obj[key] = ""
+            print(f"키만 있음 (빈 값): {key}")
+    
+    # 패키지 경로에서 클래스 이름만 추출
+    def simplify_keys(obj):
+        if not isinstance(obj, dict):
+            return obj
+        
+        simplified = {}
+        for key, value in obj.items():
+            # 패키지 경로가 포함된 키에서 클래스 이름만 추출
+            if '.' in key:
+                simple_key = key.split('.')[-1]
+                simplified[simple_key] = simplify_keys(value)
+            else:
+                simplified[key] = simplify_keys(value)
+        return simplified
+    
+    # 키 간소화 적용
+    simplified_result = simplify_keys(result)
+    
+    print("\n최종 파싱된 데이터:")
+    print(json.dumps(simplified_result, indent=2))
+    
+    return simplified_result
+
+def create_xml_from_data(input_data, layout_data):
+    """
+    입력 데이터와 레이아웃 데이터를 기반으로 XML을 생성합니다.
+    """
+    # 레이아웃의 첫 번째 키가 루트 요소
+    root_key = next(iter(layout_data))
+    root = ET.Element(root_key)
+    
+    print(f"루트 요소: {root_key}")
+    
+    # 루트 키에 해당하는 입력 데이터 찾기
+    root_data = None
+    
+    # 정확한 키 매칭
+    if root_key in input_data:
+        root_data = input_data[root_key]
+        print(f"루트 데이터 찾음: {root_key}")
+    
+    # 루트 데이터를 찾지 못한 경우 입력 데이터 전체 사용
+    if root_data is None:
+        print(f"루트 키 '{root_key}'에 대한 데이터를 찾을 수 없습니다. 입력 데이터 전체를 사용합니다.")
+        root_data = input_data
+    
+    # 레이아웃 구조를 기반으로 XML 트리 생성
+    for record_key, record_layout in layout_data[root_key].items():
+        record_elem = ET.SubElement(root, record_key)
+        
+        print(f"레코드 요소: {record_key}")
+        
+        # 레코드 키에 해당하는 입력 데이터 찾기
+        record_data = None
+        
+        # 정확한 키 매칭
+        if isinstance(root_data, dict) and record_key in root_data:
+            record_data = root_data[record_key]
+            print(f"레코드 데이터 찾음: {record_key}")
+        
+        # 레코드 데이터를 직접 찾지 못한 경우, 루트 데이터에서 중첩된 구조 확인
+        if record_data is None and isinstance(root_data, dict):
+            for key, value in root_data.items():
+                if isinstance(value, dict) and record_key in value:
+                    record_data = value[record_key]
+                    print(f"중첩된 구조에서 레코드 데이터 찾음: {key} -> {record_key}")
+                    break
+        
+        # 레코드 데이터가 없으면 빈 데이터 사용
+        if record_data is None:
+            print(f"레코드 키 '{record_key}'에 대한 데이터를 찾을 수 없습니다. 빈 데이터를 사용합니다.")
+            record_data = {}
+        
+        # 레코드 데이터가 딕셔너리가 아닌 경우, 내부 구조를 더 깊게 검색
+        if not isinstance(record_data, dict):
+            print(f"레코드 데이터 '{record_key}'가 딕셔너리가 아닙니다: {record_data}")
+            
+            # 입력 데이터 전체에서 필드 찾기 시도
+            field_values = {}
+            for field_key in record_layout.keys():
+                if field_key in input_data:
+                    field_values[field_key] = input_data[field_key]
+            
+            record_data = field_values
+        
+        # 필드 처리
+        for field_key in record_layout.keys():
+            field_elem = ET.SubElement(record_elem, field_key)
+            
+            # 레코드 데이터에서 필드 값 찾기
+            if field_key in record_data:
+                value = record_data[field_key]
+                if value is not None and value != "":
+                    field_elem.text = str(value)
+                    print(f"필드 설정: {field_key} = {value}")
+            # 레코드 데이터에 없으면 입력 데이터 전체에서 찾기
+            elif field_key in input_data:
+                value = input_data[field_key]
+                if value is not None and value != "":
+                    field_elem.text = str(value)
+                    print(f"최상위에서 필드 설정: {field_key} = {value}")
+            else:
+                print(f"필드 '{field_key}'를 찾을 수 없습니다")
+    
+    # XML 문자열로 변환
+    xml_str = ET.tostring(root, encoding='utf-8')
+    dom = minidom.parseString(xml_str)
+    pretty_xml = dom.toprettyxml(indent="  ")
+    
+    # XML 선언 제거 (요구사항에 따라)
+    pretty_xml = pretty_xml.replace('<?xml version="1.0" ?>\n', '')
+    
+    return pretty_xml
+
+def ensure_directory_exists(directory_path):
+    """
+    디렉토리가 존재하지 않으면 생성합니다.
+    """
+    if not os.path.exists(directory_path):
+        try:
+            os.makedirs(directory_path)
+            print(f"디렉토리 생성: {directory_path}")
+        except Exception as e:
+            print(f"디렉토리 생성 오류: {e}")
+            sys.exit(1)
+
+def extract_service_name(file_path):
+    """
+    파일 경로에서 서비스 이름을 추출합니다.
+    """
+    base_name = os.path.basename(file_path)
+    # _input.txt 또는 _layout.json 접미사 제거
+    if "_input.txt" in base_name:
+        return base_name.replace("_input.txt", "")
+    elif "_layout.json" in base_name:
+        return base_name.replace("_layout.json", "")
+    return base_name
+
+def main():
+    # 명령줄 인수 처리
+    if len(sys.argv) > 2:
+        input_file_path = sys.argv[1]
+        layout_file_path = sys.argv[2]
+    else:
+        # 기본 파일 경로 설정
+        input_file_path = "testservice_input_files/SPAAA0680P01_input.txt"
+        layout_file_path = "testservice_layout_files/SPAAA0680P01_layout.json"
+    
+    result_dir = "testservice_result_files"
+    
+    # 서비스 이름 추출
+    service_name = extract_service_name(input_file_path)
+    output_file_path = os.path.join(result_dir, f"{service_name}_output.xml")
+    
+    # 결과 디렉토리 확인 및 생성
+    ensure_directory_exists(result_dir)
+    
+    # 입력 파일이 존재하는지 확인
+    if not os.path.exists(input_file_path):
+        print(f"입력 파일이 존재하지 않습니다: {input_file_path}")
+        sys.exit(1)
+    
+    # 레이아웃 파일이 존재하는지 확인
+    if not os.path.exists(layout_file_path):
+        print(f"레이아웃 파일이 존재하지 않습니다: {layout_file_path}")
+        sys.exit(1)
+    
+    # 파일 읽기
+    input_content = read_file(input_file_path)
+    layout_content = read_file(layout_file_path)
+    
+    print(f"처리 중인 서비스: {service_name}")
+    print("입력 파일 내용:")
+    print(input_content)
+    
+    # 입력 데이터 파싱
+    try:
+        input_data = parse_log_format(input_content)
+        print("\n파싱된 입력 데이터:")
+        print(json.dumps(input_data, indent=2))
+    except Exception as e:
+        print(f"입력 데이터 파싱 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    
+    # 레이아웃 데이터 파싱
+    try:
+        layout_data = json.loads(layout_content)
+        print("\n파싱된 레이아웃 데이터:")
+        print(json.dumps(layout_data, indent=2))
+    except json.JSONDecodeError as e:
+        print(f"레이아웃 데이터 파싱 오류: {e}")
+        sys.exit(1)
+    
+    # XML 생성
+    xml_output = create_xml_from_data(input_data, layout_data)
+    
+    # 결과 파일 저장
+    with open(output_file_path, 'w', encoding='utf-8') as file:
+        file.write(xml_output)
+    
+    print(f"\nXML 파일이 생성되었습니다: {output_file_path}")
+    print("생성된 XML 내용:")
+    print(xml_output)
+
+if __name__ == "__main__":
+    main()
