@@ -1,0 +1,22 @@
+import cx_Oracle
+
+conn = cx_Oracle.connect("tester/12341234@jdbc:oracle:thin:@172.22.210.45:1521:XE")
+cursor = conn.cursor()
+
+cursor.execute("""
+    SELECT MEMBER_ID, MEMBER_NAME, EMAIL, PHONE_NUMBER, STATUS, CREATED_DATE, UPDATED_DATE 
+    FROM MEMBERS
+""")
+
+rows = cursor.fetchall()
+columns = [col[0] for col in cursor.description]
+
+with open("MEMBER_DATA.md", "w", encoding="utf-8") as f:
+    f.write("## [Table] MEMBER\n\n")
+    f.write("**Description:** 회원 기본 정보 테이블\n\n")
+
+    for i, row in enumerate(rows, 1):
+        f.write(f"### Record {i}\n\n")
+        for col, val in zip(columns, row):
+            f.write(f"- {col}: {val}\n")
+        f.write("\n---\n\n")
